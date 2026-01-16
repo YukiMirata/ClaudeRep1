@@ -18,6 +18,7 @@ Never miss a moment with this stunning desktop app featuring gorgeous animations
 ### 📅 Event Management
 - **Create Events**: Full-featured event creation with beautiful modal dialogs
 - **Rich Customization**: Title, description, color, and sound settings
+- **Sound Picker**: Choose from 6 beautiful preset sounds with preview
 - **Complex Recurrence**: Daily, weekly, monthly, yearly patterns
 - **Advanced Scheduling**: "Every 2nd Tuesday", "Last Friday of month", and more
 - **Visual Previews**: See next 5 occurrences before saving
@@ -37,6 +38,15 @@ Never miss a moment with this stunning desktop app featuring gorgeous animations
 - **Sounds**: Enable/disable notification sounds
 - **Check Interval**: Adjust event checking frequency
 - **Auto-Save**: All changes saved instantly
+
+### 🔔 Notifications
+- **Event Popups**: Gorgeous floating notifications when events trigger
+- **Color-Matched**: Notifications glow with your event colors
+- **Pulsing Icons**: Animated calendar icons
+- **Auto-Dismiss**: Notifications fade after 10 seconds
+- **Manual Dismiss**: Close button for instant removal
+- **Stacked Display**: Multiple notifications with elegant stacking
+- **Sound Playback**: Plays selected sound when events trigger
 
 ### 🪟 Windows 11 Integration
 - **Always-on-Top**: Stays visible above all other windows
@@ -94,8 +104,21 @@ npm run electron:build
    - **Color** - Choose from 18 beautiful gradients
    - **Start Date & Time**
    - **Recurrence Pattern** - Select from presets or custom
+   - **Notification Sound** - Pick from 6 preset sounds with preview
 3. Adjust **volume slider** for notifications
 4. Click **"Create Event"**
+
+### Sound Presets
+
+Choose from 6 beautiful notification sounds:
+- **Bell** - Classic notification bell
+- **Chime** - Soft melodic chime
+- **Ding** - Quick attention sound
+- **Alert** - Urgent alert tone
+- **Notify** - Gentle notification
+- **Ping** - Quick ping sound
+
+Each sound has a **play/pause button** for instant preview!
 
 ### Recurrence Patterns
 
@@ -279,8 +302,15 @@ Built with:
 
 ## 🚧 Roadmap
 
+### ✅ Recently Added (Phase 5)
+- ✨ Sound file picker with 6 preset sounds and preview
+- ✨ Beautiful event notification popups
+- ✨ Notification manager system
+- ✨ Loading skeletons with shimmer effects
+- ✨ Sound playback integration
+
 ### Coming Soon
-- Sound file picker for custom notification sounds
+- Custom sound file upload
 - System tray integration
 - Start on boot option
 - Light theme
@@ -290,6 +320,7 @@ Built with:
 - Export/Import events
 - Calendar view
 - Statistics dashboard
+- Event history log
 
 ---
 
