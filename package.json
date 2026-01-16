@@ -40,6 +40,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.17",
     "concurrently": "^8.2.2",
+    "esbuild": "^0.19.0",
     "electron": "^29.0.0",
     "electron-builder": "^24.13.3",
     "lowdb": "^7.0.1",
