@@ -1,5 +1,10 @@
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, CheckCircle } from 'lucide-react';
+import { Clock, CheckCircle, Calendar } from 'lucide-react';
+import { useEventsStore } from '../stores/useEventsStore';
+import { useTimelineOccurrences } from '../hooks/useEventOccurrences';
+import { useRealtime } from '../hooks/useInterval';
+import { formatRelative, formatCalendar } from '../lib/date-utils';
 
 const pageVariants = {
   initial: { opacity: 0, x: -20, filter: 'blur(10px)' },
@@ -18,6 +23,30 @@ const pageVariants = {
 };
 
 const Timeline = () => {
+  const fetchEvents = useEventsStore((state) => state.fetchEvents);
+  const { active, recent } = useTimelineOccurrences();
+
+  // Fetch events on mount
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  // Real-time updates every second
+  useRealtime(() => {
+    // Forces re-render to update time displays
+  }, true);
+
+  // Ensure minimum 4 items by padding with placeholders
+  const activeWithPlaceholders = [...active];
+  while (activeWithPlaceholders.length < 4) {
+    activeWithPlaceholders.push(null as any);
+  }
+
+  const recentWithPlaceholders = [...recent];
+  while (recentWithPlaceholders.length < 4) {
+    recentWithPlaceholders.push(null as any);
+  }
+
   return (
     <motion.div
       variants={pageVariants}
@@ -39,25 +68,50 @@ const Timeline = () => {
             <div className="flex items-center gap-2 mb-4">
               <Clock className="text-blue-400" size={20} />
               <h3 className="text-lg font-semibold text-white">Still Happening</h3>
-              <span className="text-xs px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full">4</span>
+              <span className="text-xs px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full">
+                {active.length}
+              </span>
             </div>
             <div className="space-y-3">
-              {[1, 2, 3, 4].map((i) => (
+              {activeWithPlaceholders.slice(0, 4).map((occurrence, i) => (
                 <motion.div
-                  key={i}
-                  className="p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-blue-500/5 border border-blue-400/20 backdrop-blur-sm"
+                  key={occurrence?.id || `placeholder-active-${i}`}
+                  className={`p-4 rounded-xl backdrop-blur-sm ${
+                    occurrence
+                      ? 'bg-gradient-to-r from-blue-500/10 to-blue-500/5 border border-blue-400/20'
+                      : 'bg-slate-800/20 border border-slate-700/20'
+                  }`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  whileHover={{ scale: 1.02, borderColor: 'rgba(59, 130, 246, 0.4)' }}
+                  whileHover={occurrence ? { scale: 1.02, borderColor: 'rgba(59, 130, 246, 0.4)' } : {}}
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-white">Event {i}</div>
-                      <div className="text-xs text-slate-400 mt-1">In progress...</div>
+                  {occurrence ? (
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div
+                          className="font-medium text-white mb-1"
+                          style={{ color: occurrence.event.color }}
+                        >
+                          {occurrence.event.title}
+                        </div>
+                        {occurrence.event.description && (
+                          <div className="text-xs text-slate-400 mb-2">
+                            {occurrence.event.description}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <Calendar size={12} />
+                          <span>{formatCalendar(occurrence.occurrenceTime)}</span>
+                        </div>
+                      </div>
+                      <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse flex-shrink-0 ml-2 mt-1" />
                     </div>
-                    <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
-                  </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-16 text-slate-600 text-sm">
+                      No active events
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </div>
@@ -68,25 +122,49 @@ const Timeline = () => {
             <div className="flex items-center gap-2 mb-4">
               <CheckCircle className="text-green-400" size={20} />
               <h3 className="text-lg font-semibold text-white">Just Happened</h3>
-              <span className="text-xs px-2 py-1 bg-green-500/20 text-green-300 rounded-full">4</span>
+              <span className="text-xs px-2 py-1 bg-green-500/20 text-green-300 rounded-full">
+                {recent.length}
+              </span>
             </div>
             <div className="space-y-3">
-              {[1, 2, 3, 4].map((i) => (
+              {recentWithPlaceholders.slice(0, 4).map((occurrence, i) => (
                 <motion.div
-                  key={i}
-                  className="p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-green-500/5 border border-green-400/20 backdrop-blur-sm"
+                  key={occurrence?.id || `placeholder-recent-${i}`}
+                  className={`p-4 rounded-xl backdrop-blur-sm ${
+                    occurrence
+                      ? 'bg-gradient-to-r from-green-500/10 to-green-500/5 border border-green-400/20'
+                      : 'bg-slate-800/20 border border-slate-700/20'
+                  }`}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  whileHover={{ scale: 1.02, borderColor: 'rgba(34, 197, 94, 0.4)' }}
+                  whileHover={occurrence ? { scale: 1.02, borderColor: 'rgba(34, 197, 94, 0.4)' } : {}}
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-white">Event {i}</div>
-                      <div className="text-xs text-slate-400 mt-1">{i} min ago</div>
+                  {occurrence ? (
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div
+                          className="font-medium text-white mb-1"
+                          style={{ color: occurrence.event.color }}
+                        >
+                          {occurrence.event.title}
+                        </div>
+                        {occurrence.event.description && (
+                          <div className="text-xs text-slate-400 mb-2">
+                            {occurrence.event.description}
+                          </div>
+                        )}
+                        <div className="text-xs text-slate-500">
+                          {formatRelative(occurrence.occurrenceTime)}
+                        </div>
+                      </div>
+                      <CheckCircle className="text-green-400 flex-shrink-0 ml-2 mt-1" size={16} />
                     </div>
-                    <CheckCircle className="text-green-400" size={16} />
-                  </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-16 text-slate-600 text-sm">
+                      No recent events
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </div>
