@@ -7,6 +7,7 @@ import Textarea from '../ui/Textarea';
 import Button from '../ui/Button';
 import ColorPicker from './ColorPicker';
 import RecurrenceEditor from './RecurrenceEditor';
+import SoundPicker from './SoundPicker';
 import { Event, CreateEventData } from '../../types/event';
 import { useEventsStore } from '../../stores/useEventsStore';
 import { RECURRENCE_PRESETS } from '../../lib/recurrence';
@@ -152,6 +153,13 @@ const EventForm = ({ isOpen, onClose, event }: EventFormProps) => {
           value={formData.recurrenceRule}
           startDate={new Date(formData.startDate)}
           onChange={(rule) => setFormData({ ...formData, recurrenceRule: rule })}
+        />
+
+        {/* Sound Picker */}
+        <SoundPicker
+          label="Notification Sound"
+          value={formData.soundFile}
+          onChange={(soundFile) => setFormData({ ...formData, soundFile })}
         />
 
         {/* Sound Volume */}

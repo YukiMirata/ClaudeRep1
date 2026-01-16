@@ -5,6 +5,7 @@ import Navigation from './components/layout/Navigation';
 import EventManagement from './pages/EventManagement';
 import Timeline from './pages/Timeline';
 import Settings from './pages/Settings';
+import NotificationManager from './components/notifications/NotificationManager';
 import { useSettingsStore } from './stores/useSettingsStore';
 
 type Page = 'events' | 'timeline' | 'settings';
@@ -96,6 +97,9 @@ function App() {
           },
         }}
       />
+
+      {/* Event Notification Popups */}
+      <NotificationManager />
     </div>
   );
 }
