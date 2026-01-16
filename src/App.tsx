@@ -1,14 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Toaster } from 'react-hot-toast';
 import Navigation from './components/layout/Navigation';
 import EventManagement from './pages/EventManagement';
 import Timeline from './pages/Timeline';
 import Settings from './pages/Settings';
+import { useSettingsStore } from './stores/useSettingsStore';
 
 type Page = 'events' | 'timeline' | 'settings';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('timeline');
+  const fetchSettings = useSettingsStore((state) => state.fetchSettings);
+
+  // Initialize settings on mount
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -61,6 +69,33 @@ function App() {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* Toast Notifications */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#1e293b',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '12px',
+            backdropFilter: 'blur(12px)',
+          },
+          success: {
+            iconTheme: {
+              primary: '#22c55e',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
     </div>
   );
 }
