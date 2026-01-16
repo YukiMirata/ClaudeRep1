@@ -6,10 +6,8 @@ import { EventScheduler } from './scheduler';
 import { setupEventHandlers } from './ipc/events';
 import { setupSettingsHandlers } from './ipc/settings';
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) {
-  app.quit();
-}
+// Note: electron-squirrel-startup is not needed for development
+// If you need it for production builds, add it as an ES module
 
 let mainWindow: BrowserWindow | null = null;
 let scheduler: EventScheduler | null = null;
