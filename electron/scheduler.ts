@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron';
-import { getDatabase } from './database';
+import { getAllEvents } from './database';
 
 export class EventScheduler {
   private checkInterval: NodeJS.Timeout | null = null;
@@ -32,16 +32,13 @@ export class EventScheduler {
 
   private async checkForDueEvents(): Promise<void> {
     try {
-      const db = getDatabase();
       const now = Date.now();
 
       // Get all enabled events
-      const events = db.prepare(`
-        SELECT * FROM events
-        WHERE is_enabled = 1
-        AND start_date <= ?
-        AND (end_date IS NULL OR end_date >= ?)
-      `).all(now, now);
+      const allEvents = await getAllEvents();
+      const events = allEvents.filter(
+        e => e.isEnabled && e.startDate <= now && (!e.endDate || e.endDate >= now)
+      );
 
       // For now, just log - we'll implement full recurrence checking later
       if (events.length > 0) {

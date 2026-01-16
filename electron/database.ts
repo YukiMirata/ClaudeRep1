@@ -1,90 +1,151 @@
-import Database from 'better-sqlite3';
 import path from 'path';
 import { app } from 'electron';
+import { Low } from 'lowdb';
+import { JSONFile } from 'lowdb/node';
 
-let db: Database.Database | null = null;
+interface EventData {
+  id: string;
+  title: string;
+  description?: string;
+  color: string;
+  soundFile?: string;
+  soundVolume: number;
+  recurrenceRule: string;
+  startDate: number;
+  endDate?: number;
+  isEnabled: boolean;
+  priority: number;
+  tags: string[];
+  createdAt: number;
+  updatedAt: number;
+  lastTriggered?: number;
+}
+
+interface OccurrenceData {
+  id: string;
+  eventId: string;
+  occurrenceTime: number;
+  wasShown: boolean;
+  wasDismissed: boolean;
+}
+
+interface DatabaseSchema {
+  events: EventData[];
+  occurrences: OccurrenceData[];
+  settings: Record<string, any>;
+}
+
+let db: Low<DatabaseSchema> | null = null;
 
 export const initDatabase = async (): Promise<void> => {
   const userDataPath = app.getPath('userData');
-  const dbPath = path.join(userDataPath, 'events.db');
+  const dbPath = path.join(userDataPath, 'events.json');
 
-  db = new Database(dbPath);
+  // Create adapter
+  const adapter = new JSONFile<DatabaseSchema>(dbPath);
 
-  // Enable WAL mode for better concurrent access
-  db.pragma('journal_mode = WAL');
+  // Initialize database
+  db = new Low(adapter, {
+    events: [],
+    occurrences: [],
+    settings: {},
+  });
 
-  // Create tables
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS events (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      description TEXT,
-      color TEXT NOT NULL,
-      sound_file TEXT,
-      sound_volume REAL DEFAULT 1.0,
+  // Read data from JSON file
+  await db.read();
 
-      recurrence_rule TEXT NOT NULL,
-      start_date INTEGER NOT NULL,
-      end_date INTEGER,
-
-      is_enabled INTEGER DEFAULT 1,
-      priority INTEGER DEFAULT 0,
-      tags TEXT,
-
-      created_at INTEGER NOT NULL,
-      updated_at INTEGER NOT NULL,
-      last_triggered INTEGER
-    );
-
-    CREATE TABLE IF NOT EXISTS event_occurrences (
-      id TEXT PRIMARY KEY,
-      event_id TEXT NOT NULL,
-      occurrence_time INTEGER NOT NULL,
-      was_shown INTEGER DEFAULT 0,
-      was_dismissed INTEGER DEFAULT 0,
-      FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS settings (
-      key TEXT PRIMARY KEY,
-      value TEXT NOT NULL
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_events_start_date ON events(start_date);
-    CREATE INDEX IF NOT EXISTS idx_events_enabled ON events(is_enabled);
-    CREATE INDEX IF NOT EXISTS idx_occurrences_time ON event_occurrences(occurrence_time);
-    CREATE INDEX IF NOT EXISTS idx_occurrences_event ON event_occurrences(event_id);
-  `);
-
-  // Insert default settings if not exists
-  const settingsCount = db.prepare('SELECT COUNT(*) as count FROM settings').get() as { count: number };
-
-  if (settingsCount.count === 0) {
-    const defaultSettings = {
+  // Initialize default settings if empty
+  if (Object.keys(db.data.settings).length === 0) {
+    db.data.settings = {
       theme: 'dark',
       alwaysOnTop: true,
       soundsEnabled: true,
       notificationsEnabled: true,
       checkIntervalMs: 30000,
     };
-
-    const insert = db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)');
-    for (const [key, value] of Object.entries(defaultSettings)) {
-      insert.run(key, JSON.stringify(value));
-    }
+    await db.write();
   }
+
+  console.log('Database initialized with lowdb');
 };
 
-export const getDatabase = (): Database.Database => {
+export const getDatabase = (): Low<DatabaseSchema> => {
   if (!db) {
     throw new Error('Database not initialized');
   }
   return db;
 };
 
-export const closeDatabase = (): void => {
+export const closeDatabase = async (): Promise<void> => {
   if (db) {
-    db.close();
+    await db.write();
     db = null;
   }
+};
+
+// Helper functions for common operations
+
+export const getAllEvents = async (): Promise<EventData[]> => {
+  const database = getDatabase();
+  await database.read();
+  return database.data.events;
+};
+
+export const getEventById = async (id: string): Promise<EventData | undefined> => {
+  const database = getDatabase();
+  await database.read();
+  return database.data.events.find(e => e.id === id);
+};
+
+export const createEvent = async (event: EventData): Promise<EventData> => {
+  const database = getDatabase();
+  await database.read();
+  database.data.events.push(event);
+  await database.write();
+  return event;
+};
+
+export const updateEvent = async (id: string, updates: Partial<EventData>): Promise<EventData | null> => {
+  const database = getDatabase();
+  await database.read();
+  const index = database.data.events.findIndex(e => e.id === id);
+  if (index === -1) return null;
+
+  database.data.events[index] = {
+    ...database.data.events[index],
+    ...updates,
+    updatedAt: Date.now(),
+  };
+
+  await database.write();
+  return database.data.events[index];
+};
+
+export const deleteEvent = async (id: string): Promise<boolean> => {
+  const database = getDatabase();
+  await database.read();
+  const initialLength = database.data.events.length;
+  database.data.events = database.data.events.filter(e => e.id !== id);
+
+  // Also delete related occurrences
+  database.data.occurrences = database.data.occurrences.filter(o => o.eventId !== id);
+
+  await database.write();
+  return database.data.events.length < initialLength;
+};
+
+export const getSettings = async (): Promise<Record<string, any>> => {
+  const database = getDatabase();
+  await database.read();
+  return database.data.settings;
+};
+
+export const updateSettings = async (settings: Record<string, any>): Promise<void> => {
+  const database = getDatabase();
+  await database.read();
+  database.data.settings = {
+    ...database.data.settings,
+    ...settings,
+  };
+  await database.write();
 };
