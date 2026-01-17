@@ -35,6 +35,15 @@ const Settings = () => {
     fetchSettings();
   }, [fetchSettings]);
 
+  const handleTestNotification = async () => {
+    if (window.electronAPI?.triggerTestNotification) {
+      await window.electronAPI.triggerTestNotification();
+      toast.success('Test notification sent!');
+    } else {
+      toast.error('Test notification not available');
+    }
+  };
+
   if (!settings) {
     return (
       <motion.div
@@ -151,6 +160,16 @@ const Settings = () => {
                 label="Enable Sounds"
                 description="Play sounds for event notifications"
               />
+
+              <div className="pt-4 border-t border-white/10">
+                <Button onClick={handleTestNotification} variant="secondary" size="sm">
+                  <Volume2 size={16} />
+                  <span>Test Notification</span>
+                </Button>
+                <p className="text-xs text-slate-500 mt-2">
+                  Trigger a test notification to see how they work
+                </p>
+              </div>
             </div>
           </motion.div>
 

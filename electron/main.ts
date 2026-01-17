@@ -81,3 +81,12 @@ ipcMain.handle('get-always-on-top', () => {
   }
   return false;
 });
+
+// Test notification trigger (for debugging)
+ipcMain.handle('trigger-test-notification', async () => {
+  if (scheduler) {
+    await scheduler.triggerTestEvent();
+    return true;
+  }
+  return false;
+});

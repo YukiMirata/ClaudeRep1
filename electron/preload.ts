@@ -38,6 +38,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('event:updated', subscription);
     return () => ipcRenderer.removeListener('event:updated', subscription);
   },
+
+  // Testing
+  triggerTestNotification: () => ipcRenderer.invoke('trigger-test-notification'),
 });
 
 // TypeScript types for the exposed API
@@ -57,6 +60,7 @@ export interface ElectronAPI {
   updateSettings: (settings: any) => Promise<any>;
   onEventTriggered: (callback: (event: any) => void) => () => void;
   onEventUpdate: (callback: () => void) => () => void;
+  triggerTestNotification: () => Promise<boolean>;
 }
 
 declare global {
